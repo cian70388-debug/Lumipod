@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#7c3aed" />
+  <title>Lumipod</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icons/icon-192.svg" type="image/svg+xml">
+  <meta name="description" content="Raise your luminescent buddy. Feed, clean, play—keep the glow alive!" />
+  <style>
+    :root { --bg:#0f0f14; --card:#181825; --text:#f8f8ff; --muted:#b6b6d8; --brand:#7c3aed; }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell;
+      background: radial-gradient(900px 560px at 80% -10%, #2a185e 0, #0f0f14 60%), var(--bg);
+      color:var(--text);
+      display:grid;
+      place-items:center;
+      padding: env(safe-area-inset-top) 8px env(safe-area-inset-bottom);
+    }
+    .app{
+      width:min(960px,100%);
+      padding:16px;
+      background:linear-gradient(180deg,#1b1b2b, #141423);
+      border:1px solid #2b2b45;
+      border-radius:20px;
+      box-shadow:0 18px 40px rgba(0,0,0,.45)
+    }
+    .header{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+    .title{font-size:clamp(20px,4vw,30px); font-weight:800; letter-spacing:.3px}
+    .muted{color:var(--muted)}
+    .stats{display:flex; gap:8px; flex-wrap:wrap}
+    .chip{padding:8px 10px; border-radius:999px; background:#1c1c2e; border:1px solid #2b2b45}
+    .layout{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      margin-top:12px;
+    }
+    @media (max-width: 720px){
+      .layout{ grid-template-columns: 1fr; }
+    }
+    .pet{
+      display:grid; place-items:center; aspect-ratio:1/1;
+      width:100%; min-height:260px;
+      background:radial-gradient(circle at 50% 40%, #1f1f35 0, #121224 70%);
+      border-radius:18px; border:1px solid #2b2b45; position:relative; overflow:hidden;
+    }
+    svg.creature{width:min(320px,80%); height:auto}
+    .controls{
+      background:#121224; border:1px solid #2b2b45; border-radius:18px; padding:12px;
+    }
+    .grid{
+      display:grid; gap:10px;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+    }
+    @media (min-width: 721px){
+      .grid{ grid-template-columns: repeat(4, minmax(0,1fr)); }
+    }
+    button{
+      cursor:pointer; padding:12px 14px; border-radius:12px;
+      border:1px solid #2b2b45; background:#1c1c2e; color:var(--text); font-weight:700; width:100%;
+    }
+    button:hover{border-color:#3f3f6b}
+    .row{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px}
+    .log{margin-top:10px; padding:10px; border-radius:12px; background:#121224; border:1px solid #2b2b45; min-height:48px; color:var(--muted)}
+    .badges{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px}
+    .badge{background:#1c1c2e; border:1px solid #2b2b45; padding:8px 10px; border-radius:999px}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <div>
+        <div class="title">Lumipod <span class="muted">— keep the glow alive</span></div>
+        <div class="stats">
+          <span class="chip">Day: <strong id="day">1</strong></span>
+          <span class="chip">Score: <strong id="score">0</strong></span>
+          <span class="chip">Daily: <strong id="daily">available</strong></span>
+          <span class="chip">Boosts: <strong id="boostCount">0</strong></span>
+        </div>
+      </div>
+      <div class="badges" id="statusBadges"></div>
+    </div>
+
+    <div class="layout">
+      <div class="pet">
+        <!-- Creature SVG evolves by health & care actions -->
+        <svg class="creature" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <radialGradient id="lg" cx="50%" cy="45%">
+              <stop offset="0%" stop-color="#b19cff"/>
+              <stop offset="50%" stop-color="#7c3aed"/>
+              <stop offset="100%" stop-color="#291c5a"/>
+            </radialGradient>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3"/>
+              <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7"/>
+            </filter>
+          </defs>
+          <!-- Body blob (morphs via JS) -->
+          <path id="body" d="" fill="url(#lg)"></path>
+          <!-- Face -->
+          <g id="face" opacity="1">
+            <circle id="eyeL" cx="80" cy="95" r="8" fill="#0b0b12"/>
+            <circle id="eyeR" cx="120" cy="95" r="8" fill="#0b0b12"/>
+            <path id="mouth" d="M80,120 Q100,130 120,120" stroke="#0b0b12" stroke-width="4" fill="none" stroke-linecap="round"/>
+          </g>
+          <!-- Aura -->
+          <circle id="aura" cx="100" cy="98" r="70" fill="url(#lg)" opacity="0.25" filter="url(#glow)"/>
+        </svg>
+      </div>
+
+      <div class="controls">
+        <div class="grid">
+          <button data-action="feed">🍜 Feed</button>
+          <button data-action="clean">🧼 Clean</button>
+          <button data-action="play">🎮 Play</button>
+          <button data-action="rest">😴 Rest</button>
+        </div>
+
+        <div class="row">
+          <button id="claimDaily">🎁 Claim Daily Reward</button>
+          <button id="useBoost" disabled>⚡ Use Boost</button>
+        </div>
+
+        <div class="row" id="bars"></div>
+        <div class="log" id="log">Your lumipod hums softly…</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/app.js"></script>
+  <script>
+    // Keep PWA offline but no install button UI
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
+    }
+  </script>
+</body>
+</html>
